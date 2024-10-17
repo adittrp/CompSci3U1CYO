@@ -1,23 +1,24 @@
 import pygame
+from player import Player
 
 # Initialize Pygame
 pygame.init()
 
 # Constants
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-SQUARE_SIZE = 50
-SQUARE_COLOR = (255, 0, 0)  # Red
-BACKGROUND_COLOR = (0, 0, 0)  # Black
-SPEED = 5
+screen_size = (800, 600)
+player_color = (255, 0, 0)  # Red
+bg_color = (0, 0, 0)  # Black
+player_speed = 5
 
 # Set up the display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Top Down Square Movement")
+window = pygame.display.set_mode((screen_size[0], screen_size[1]))
+pygame.display.set_caption("Code Your Own")
 
 # Initial position of the square
-x = SCREEN_WIDTH // 2
-y = SCREEN_HEIGHT // 2
+x = screen_size[0] // 2
+y = screen_size[1] // 2
+
+player = Player(x, y, 50, player_color, player_speed)
 
 # Game loop
 running = True
@@ -28,25 +29,17 @@ while running:
     # Get the keys pressed
     keys = pygame.key.get_pressed()
 
-    # Move the square based on key presses
-    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-        x -= SPEED
-    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-        x += SPEED
-    if keys[pygame.K_UP] or keys[pygame.K_w]:
-        y -= SPEED
-    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-        y += SPEED
+    player.update_position(keys)
 
     # Ensure the square stays within the window bounds
-    x = max(0, min(SCREEN_WIDTH - SQUARE_SIZE, x))
-    y = max(0, min(SCREEN_HEIGHT - SQUARE_SIZE, y))
+    player.x = max(0, min(screen_size[0] - player.player_size, player.x))
+    player.y = max(0, min(screen_size[1] - player.player_size, player.y))
 
     # Fill the background
-    screen.fill(BACKGROUND_COLOR)
+    window.fill(bg_color)
 
     # Draw the square
-    pygame.draw.rect(screen, SQUARE_COLOR, (x, y, SQUARE_SIZE, SQUARE_SIZE))
+    player.display_player(window)
 
     # Update the display
     pygame.display.flip()
