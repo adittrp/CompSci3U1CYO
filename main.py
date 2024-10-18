@@ -1,4 +1,5 @@
 import pygame
+import json
 from player import Player
 from item import Item
 
@@ -7,26 +8,29 @@ pygame.init()
 
 # Constants
 screen_size = (800, 600)
-player_color = (255, 0, 0)  # Red
 bg_color = (0, 0, 0)  # Black
-player_speed = 5
-inventory_slot_size = 64  # Size of each inventory slot
-num_inventory_slots = 5  # Number of inventory slots
+inventory_slot_size = 64
+num_inventory_slots = 5
 
 # Set up the display
 window = pygame.display.set_mode((screen_size[0], screen_size[1]))
-pygame.display.set_caption("Inventory with Item Dropping")
+pygame.display.set_caption("Advanced Inventory System")
 
 # Player Initialization
-x, y = screen_size[0] // 2, screen_size[1] // 2
-player = Player(500, 500, 50, player_color, player_speed, num_inventory_slots)
+player = Player(700, 500, 50, (255, 0, 0), 5, num_inventory_slots)
 
-# Items to be picked up (randomly placed)
+# Items to be picked up
 items = [
     Item(100, 100, 30, (0, 255, 0), "Green Potion"),
     Item(400, 300, 30, (0, 0, 255), "Blue Gem"),
-    Item(600, 150, 30, (255, 255, 0), "Gold Coin"),
 ]
+
+# Load inventory from saved file if it exists
+try:
+    with open("inventory.pkl", "r") as f:
+        player.inventory = Player.load_inventory()
+except FileNotFoundError:
+    print("No saved inventory found. Starting fresh.")
 
 # Game loop
 running = True
@@ -35,40 +39,40 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # Handle right-click to drop items
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:  # Right-click
+        # Right-click to drop an item
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             mouse_pos = pygame.mouse.get_pos()
             player.drop_item(mouse_pos, items)
 
-    # Get the keys pressed and update player position
+    # Update player position
     keys = pygame.key.get_pressed()
     player.update_position(keys)
 
-    # Ensure the player stays within the window bounds
-    player.x = max(0, min(screen_size[0] - player.player_size, player.x))
-    player.y = max(0, min(screen_size[1] - player.player_size, player.y))
-
-    # Check for collisions between the player and items
+    # Check for collisions with items
     for item in items[:]:
-        if player.check_collision(item):
-            player.pick_item(item)
-            items.remove(item)  # Remove the item from the world
+        if player.check_inv_availability():
+            if player.check_collision(item):
+                player.pick_item(item)
+                items.remove(item)
+        else:
+            break
 
-    # Fill the background
+    # Fill the background and display everything
     window.fill(bg_color)
-
-    # Draw the player and items
-    player.display_player(window)
     for item in items:
-        item.display_item(window)
+        item.display(window)
 
-    # Draw the player's inventory slots and items
-    player.display_inventory(window, screen_size[0], inventory_slot_size)
+    player.display(window)
 
+    player.display_inventory(window)
     # Update the display
     pygame.display.flip()
 
     # Cap the frame rate
     pygame.time.Clock().tick(60)
+
+# Save the player's inventory when quitting
+with open("inventory.pkl", "w") as f:
+    player.save_inventory()  # Saves the inventory to "inventory.pkl"
 
 pygame.quit()

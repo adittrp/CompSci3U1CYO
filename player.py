@@ -1,83 +1,98 @@
 import pygame
+import pickle  # For pickling data
+from item import  Item
+from item import GameObject
 
-class Player:
+class Player(GameObject):
+    """Player class inherits from GameObject and manages inventory."""
+
     def __init__(self, x, y, size, color, speed, max_inventory):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.player_size = size
-        self.player_speed = speed
-        self.inventory = [None] * max_inventory  # Fixed size inventory
+        super().__init__(x, y, size, color)
+        self.speed = speed
+        self.inventory = [None] * max_inventory
+        self.slot_size = 64  # Size of inventory slots
 
-    def display_player(self, window):
-        pygame.draw.rect(window, self.color, (self.x, self.y, self.player_size, self.player_size))
+    def display(self, window):
+        pygame.draw.rect(window, self.color, (self._x, self._y, self.size, self.size))
 
     def update_position(self, keys):
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.x -= self.player_speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.x += self.player_speed
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            self.y -= self.player_speed
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            self.y += self.player_speed
+        direction = Player.get_movement_direction(keys)
+        self._x += direction[0] * self.speed
+        self._y += direction[1] * self.speed
+
+    @staticmethod
+    def get_movement_direction(keys):
+        """Static method to get movement direction."""
+        dx, dy = 0, 0
+        if keys[pygame.K_LEFT]:
+            dx = -1
+        if keys[pygame.K_RIGHT]:
+            dx = 1
+        if keys[pygame.K_UP]:
+            dy = -1
+        if keys[pygame.K_DOWN]:
+            dy = 1
+        return dx, dy
+
+    def check_collision(self, item):
+        """Check if the player collides with the given item."""
+        player_rect = pygame.Rect(self._x, self._y, self.size, self.size)
+        item_rect = pygame.Rect(item._x, item._y, item.size, item.size)
+        return player_rect.colliderect(item_rect)
+
+    def check_inv_availability(self):
+        for item in self.inventory:
+            if item is None:
+                return True
+        return False
 
     def pick_item(self, item):
-        """Add the item to the first empty inventory slot."""
+        """Add an item to the first available inventory slot."""
         for i in range(len(self.inventory)):
             if self.inventory[i] is None:
                 self.inventory[i] = item
-                print(f"Picked up: {item.name}")
-                break  # Stop after adding the item
+                break
 
-    def drop_item(self, mouse_pos, world_items):
-        """Drop an item from the clicked slot."""
-        inventory_bar_y = 520  # Y-position for inventory bar
+    def drop_item(self, mouse_pos, items):
+        """Drop the item from the inventory slot the mouse is hovering over."""
+        slot_index = self.get_hovered_slot(mouse_pos)
+        if slot_index is not None and self.inventory[slot_index]:
+            # Drop the item at the player's current position
+            item = self.inventory[slot_index]
+            item.set_position(self._x, self._y + 100)
+            items.append(item)
+            self.inventory[slot_index] = None
 
-        # Check if a slot was right-clicked
+    def get_hovered_slot(self, mouse_pos):
+        """Determine which inventory slot the mouse is hovering over."""
+        mouse_x, mouse_y = mouse_pos
         for i in range(len(self.inventory)):
-            slot_x = 10 + i * (64 + 10)  # Calculate slot position
+            slot_x = 10 + i * (self.slot_size + 10)
+            slot_y = 520
+            slot_rect = pygame.Rect(slot_x, slot_y, self.slot_size, self.slot_size)
+            if slot_rect.collidepoint(mouse_x, mouse_y):
+                return i  # Return the index of the hovered slot
+        return None
 
-            # Check if the click is inside this slot
-            if slot_x <= mouse_pos[0] <= slot_x + 64 and inventory_bar_y <= mouse_pos[1] <= inventory_bar_y + 64:
-                if self.inventory[i] is not None:  # If the slot is not empty
-                    # Calculate drop position in front of the player
-                    drop_x = self.x + self.player_size // 2
-                    drop_y = self.y + self.player_size + 10
-
-                    # Create a new item at the drop position
-                    dropped_item = self.inventory[i]
-                    dropped_item.x = drop_x
-                    dropped_item.y = drop_y
-
-                    # Add the item back to the world
-                    world_items.append(dropped_item)
-
-                    # Empty the slot
-                    self.inventory[i] = None
-                    print(f"Dropped: {dropped_item.name}")
-                break  # Stop checking after one slot is clicked
-
-    def check_collision(self, item):
-        """Check if the player collides with an item."""
-        player_rect = pygame.Rect(self.x, self.y, self.player_size, self.player_size)
-        item_rect = pygame.Rect(item.x, item.y, item.size, item.size)
-        return player_rect.colliderect(item_rect)
-
-    def display_inventory(self, window, screen_width, slot_size):
-        """Draw inventory slots and items at the bottom of the screen."""
-        inventory_bar_y = 520  # Y-position for inventory bar
-
+    def display_inventory(self, window):
+        """Display the inventory slots and items."""
         for i, item in enumerate(self.inventory):
-            # Calculate slot position
-            slot_x = 10 + i * (slot_size + 10)
+            slot_x = 10 + i * (self.slot_size + 10)
+            slot_y = 520
+            pygame.draw.rect(window, (100, 100, 100), (slot_x, slot_y, self.slot_size, self.slot_size), 2)
+            if item:
+                pygame.draw.rect(window, item.color, (slot_x + 8, slot_y + 8, 48, 48))
 
-            # Draw the slot background
-            pygame.draw.rect(window, (100, 100, 100), (slot_x, inventory_bar_y, slot_size, slot_size), 2)
+    def save_inventory(self, filename="inventory.pkl"):
+        """Serialize the inventory to a file using pickle."""
+        with open(filename, "wb") as file:
+            pickle.dump(self.inventory, file)
 
-            # Draw the item inside the slot (if any)
-            if item is not None:
-                pygame.draw.rect(
-                    window, item.color,
-                    (slot_x + 8, inventory_bar_y + 8, slot_size - 16, slot_size - 16)
-                )
+    @classmethod
+    def load_inventory(cls, filename="inventory.pkl"):
+        """Load the inventory from a file using pickle."""
+        try:
+            with open(filename, "rb") as file:
+                return pickle.load(file)
+        except (FileNotFoundError, EOFError):
+            return [None] * 10  # Default empty inventory if file not found or empty
