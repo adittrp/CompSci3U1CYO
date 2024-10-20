@@ -1,16 +1,17 @@
 import pygame
 import pickle  # For pickling data
-from item import  Item
-from item import GameObject
+from item import Item, GameObject
+
 
 class Player(GameObject):
-    """Player class inherits from GameObject and manages inventory."""
+    """Player class inherits from GameObject and manages inventory and coins."""
 
     def __init__(self, x, y, size, color, speed, max_inventory):
         super().__init__(x, y, size, color)
         self.speed = speed
         self.inventory = [None] * max_inventory
         self.slot_size = 64  # Size of inventory slots
+        self.coins = 0  # Player starts with 0 coins
 
     def display(self, window):
         pygame.draw.rect(window, self.color, (self._x, self._y, self.size, self.size))
@@ -53,14 +54,20 @@ class Player(GameObject):
                 self.inventory[i] = item
                 break
 
-    def drop_item(self, mouse_pos, items):
+    def drop_item(self, mouse_pos, items, sell_area):
         """Drop the item from the inventory slot the mouse is hovering over."""
         slot_index = self.get_hovered_slot(mouse_pos)
         if slot_index is not None and self.inventory[slot_index]:
-            # Drop the item at the player's current position
+            # Drop the item
             item = self.inventory[slot_index]
             item.set_position(self._x, self._y + 100)
-            items.append(item)
+
+            # Check if item is in sell area
+            if sell_area.collides_with(item):
+                self.coins += 10  # Increase coins by 10 for selling the item
+            else:
+                items.append(item)  # Otherwise, drop it back on the ground
+
             self.inventory[slot_index] = None
 
     def get_hovered_slot(self, mouse_pos):
@@ -83,16 +90,22 @@ class Player(GameObject):
             if item:
                 pygame.draw.rect(window, item.color, (slot_x + 8, slot_y + 8, 48, 48))
 
+    def display_coins(self, window):
+        """Display the current coin total."""
+        font = pygame.font.SysFont(None, 35)
+        text = font.render(f"Coins: {self.coins}", True, (255, 255, 255))
+        window.blit(text, (10, 10))
+
     def save_inventory(self, filename="inventory.pkl"):
-        """Serialize the inventory to a file using pickle."""
+        """Serialize the inventory and coins to a file using pickle."""
         with open(filename, "wb") as file:
-            pickle.dump(self.inventory, file)
+            pickle.dump((self.inventory, self.coins), file)
 
     @classmethod
     def load_inventory(cls, filename="inventory.pkl"):
-        """Load the inventory from a file using pickle."""
+        """Load the inventory and coins from a file using pickle."""
         try:
             with open(filename, "rb") as file:
                 return pickle.load(file)
         except (FileNotFoundError, EOFError):
-            return [None] * 10  # Default empty inventory if file not found or empty
+            return [None] * 10, 0  # Default empty inventory and 0 coins if file not found or empty
