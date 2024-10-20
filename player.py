@@ -1,6 +1,6 @@
 import pygame
 import pickle  # For pickling data
-from item import Item, GameObject
+from item import GameObject
 
 
 class Player(GameObject):
@@ -10,7 +10,7 @@ class Player(GameObject):
         super().__init__(x, y, size, color)
         self.speed = speed
         self.inventory = [None] * max_inventory
-        self.slot_size = 64  # Size of inventory slots
+        self.slot_size = 100  # Scaled inventory slot size
         self.coins = 0  # Player starts with 0 coins
 
     def display(self, window):
@@ -25,13 +25,13 @@ class Player(GameObject):
     def get_movement_direction(keys):
         """Static method to get movement direction."""
         dx, dy = 0, 0
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:  # Left arrow or 'A'
             dx = -1
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:  # Right arrow or 'D'
             dx = 1
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] or keys[pygame.K_w]:  # Up arrow or 'W'
             dy = -1
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:  # Down arrow or 'S'
             dy = 1
         return dx, dy
 
@@ -60,7 +60,7 @@ class Player(GameObject):
         if slot_index is not None and self.inventory[slot_index]:
             # Drop the item
             item = self.inventory[slot_index]
-            item.set_position(self._x, self._y + 100)
+            item.set_position(self._x, self._y + 150)  # Larger player drop area offset
 
             # Check if item is in sell area
             if sell_area.collides_with(item):
@@ -75,7 +75,7 @@ class Player(GameObject):
         mouse_x, mouse_y = mouse_pos
         for i in range(len(self.inventory)):
             slot_x = 10 + i * (self.slot_size + 10)
-            slot_y = 520
+            slot_y = 35
             slot_rect = pygame.Rect(slot_x, slot_y, self.slot_size, self.slot_size)
             if slot_rect.collidepoint(mouse_x, mouse_y):
                 return i  # Return the index of the hovered slot
@@ -84,28 +84,14 @@ class Player(GameObject):
     def display_inventory(self, window):
         """Display the inventory slots and items."""
         for i, item in enumerate(self.inventory):
-            slot_x = 10 + i * (self.slot_size + 10)
-            slot_y = 520
+            slot_x = 10 + i * (self.slot_size + 20)
+            slot_y = 35  # Adjusted for larger screen
             pygame.draw.rect(window, (100, 100, 100), (slot_x, slot_y, self.slot_size, self.slot_size), 2)
             if item:
-                pygame.draw.rect(window, item.color, (slot_x + 8, slot_y + 8, 48, 48))
+                pygame.draw.rect(window, item.color, (slot_x + 10, slot_y + 10, 80, 80))  # Adjust item size
 
     def display_coins(self, window):
         """Display the current coin total."""
-        font = pygame.font.SysFont(None, 35)
-        text = font.render(f"Coins: {self.coins}", True, (255, 255, 255))
-        window.blit(text, (10, 10))
-
-    def save_inventory(self, filename="inventory.pkl"):
-        """Serialize the inventory and coins to a file using pickle."""
-        with open(filename, "wb") as file:
-            pickle.dump((self.inventory, self.coins), file)
-
-    @classmethod
-    def load_inventory(cls, filename="inventory.pkl"):
-        """Load the inventory and coins from a file using pickle."""
-        try:
-            with open(filename, "rb") as file:
-                return pickle.load(file)
-        except (FileNotFoundError, EOFError):
-            return [None] * 10, 0  # Default empty inventory and 0 coins if file not found or empty
+        font = pygame.font.SysFont(None, 50)
+        coin_text = font.render(f"Coins: {self.coins}", True, (255, 255, 255))
+        window.blit(coin_text, (1650, 50))  # Moved to top-right for larger screen
