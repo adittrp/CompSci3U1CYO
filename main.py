@@ -2,7 +2,7 @@ import pygame
 import random
 import pickle
 from player import Player
-from item import Item
+from item import Item, Inventory
 from interactableareas import SellArea, ShopArea
 
 # Initialize Pygame
@@ -31,7 +31,9 @@ sell_area = SellArea(1720, 880, 200, (255, 255, 0))
 shop_area = ShopArea(0, 880, 200, (0, 255, 255))  # A separate shop area
 
 # Player Initialization
-player = Player(1600, 900, 100, (255, 0, 0), 10, num_inventory_slots)
+player = Player(1600, 900, 100, (255, 0, 0), 10)
+
+inventory = Inventory(num_inventory_slots)
 
 # List for spawned items
 items = []
@@ -43,7 +45,7 @@ last_item_spawn_time = pygame.time.get_ticks()
 # Load inventory and coins from saved file if it exists
 try:
     with open("inventory.pkl", "rb") as f:
-        player.inventory, player.coins = pickle.load(f)
+        inventory.inventory, player.coins = pickle.load(f)
 except Exception:
     print("No saved inventory found. Starting fresh.")
 
@@ -68,7 +70,7 @@ while running:
             # Right-click to drop an item
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 mouse_pos = pygame.mouse.get_pos()
-                player.drop_item(mouse_pos, items, sell_area)
+                inventory.drop_item(mouse_pos, items, sell_area, player)
 
             # Handle player entering the shop area
             if current_time - shop_close_time > shop_cooldown:  # Check if cooldown has passed
@@ -135,9 +137,9 @@ while running:
 
         # Check for collisions with items
         for item in items[:]:
-            if player.check_inv_availability():
+            if inventory.check_inv_availability():
                 if player.check_collision(item):
-                    player.pick_item(item)
+                    inventory.pick_item(item)
                     items.remove(item)
             else:
                 break
@@ -149,7 +151,7 @@ while running:
         player.display(window)
 
         # Display player's inventory and coins
-        player.display_inventory(window)
+        inventory.display_inventory(window)
         player.display_coins(window)
 
     # Update the display
@@ -160,6 +162,6 @@ while running:
 
 # Save the player's inventory and coins when quitting
 with open("inventory.pkl", "wb") as f:
-    pickle.dump((player.inventory, player.coins), f)
+    pickle.dump((inventory.inventory, player.coins), f)
 
 pygame.quit()
