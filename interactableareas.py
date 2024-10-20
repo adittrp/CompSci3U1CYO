@@ -16,7 +16,7 @@ class InteractableAreas(GameObject, ABC):
     def collides_with(self, item):
         """Check if an item has been dropped into the sell area."""
         self_rect = pygame.Rect(self._x, self._y, self.size, self.size)
-        item_rect = pygame.Rect(item._x, item._y, item.size, item.size)
+        item_rect = pygame.Rect(item.position[0], item.position[1], item.size, item.size)
         return self_rect.colliderect(item_rect)
 
 class SellArea(InteractableAreas):

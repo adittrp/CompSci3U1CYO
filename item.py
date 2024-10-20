@@ -5,7 +5,7 @@ class GameObject(ABC):
     """Abstract class for all game objects."""
 
     def __init__(self, x, y, size, color):
-        self._x = x  # Encapsulated position
+        self._x = x
         self._y = y
         self.size = size
         self.color = color
@@ -16,14 +16,14 @@ class GameObject(ABC):
         pass
 
     @property
-    def get_position(self):
+    def position(self):
         """Getter method for position."""
         return self._x, self._y
 
-    def set_position(self, x, y):
+    @position.setter
+    def position(self, pos):
         """Setter method for position."""
-        self._x = x
-        self._y = y
+        self._x, self._y = pos[0], pos[1]
 
 
 class Item(GameObject):
@@ -60,7 +60,7 @@ class Inventory:
         if slot_index is not None and self.inventory[slot_index]:
             # Drop the item
             item = self.inventory[slot_index]
-            item.set_position(player.get_position[0], player.get_position[1] + 150)  # Larger player drop area offset
+            item.position = (player.position[0], player.position[1] + 150)  # Larger player drop area offset
 
             # Check if item is in sell area
             if sell_area.collides_with(item):

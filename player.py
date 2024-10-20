@@ -36,7 +36,7 @@ class Player(GameObject):
     def check_collision(self, item):
         """Check if the player collides with the given item."""
         player_rect = pygame.Rect(self._x, self._y, self.size, self.size)
-        item_rect = pygame.Rect(item.get_position[0], item.get_position[1], item.size, item.size)
+        item_rect = pygame.Rect(item.position[0], item.position[1], item.size, item.size)
         return player_rect.colliderect(item_rect)
 
     def display_coins(self, window):
