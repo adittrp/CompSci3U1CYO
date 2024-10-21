@@ -95,9 +95,9 @@ class Inventory:
         try:
             with open(filename, "rb") as file:
                 return pickle.load(file)
-        except (FileNotFoundError, EOFError) as e:
+        except Exception as e:
             try:
-                raise ValueError("Error loading data due to a file-related issue.")
+                pickle.load(file)
             except ValueError as f:
                 print('Inner exception (f):', f)
                 print('Outer exception (e):', e)

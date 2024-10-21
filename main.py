@@ -18,7 +18,7 @@ shop_open = False
 shop_close_time = 0
 shop_cooldown = 1500
 
-# Set updisplay
+# Set up display
 window = pygame.display.set_mode(screen_size)
 pygame.display.set_caption("Potion Profiter")
 
@@ -80,7 +80,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # Ttitle screen
+        # Title screen
         if on_title_screen:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
