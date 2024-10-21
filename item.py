@@ -6,11 +6,9 @@ import pickle
 class GameObject(ABC):
     """Abstract class for all game objects."""
 
-    def __init__(self, x, y, size, color):
+    def __init__(self, x, y):
         self._x = x
         self._y = y
-        self.size = size
-        self.color = color
 
     @abstractmethod
     def display(self, window):
@@ -31,12 +29,13 @@ class GameObject(ABC):
 class Item(GameObject):
     """Item class inherits from GameObject."""
 
-    def __init__(self, x, y, size, color, name):
-        super().__init__(x, y, size, color)
-        self.name = name
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
     def display(self, window):
-        pygame.draw.rect(window, self.color, (self._x, self._y, self.size, self.size))
+        image = pygame.image.load("Files/GreenPotion.png")
+        image = pygame.transform.scale(image, (150, 150))
+        window.blit(image, (self._x - 10, self._y - 25))
 
 
 class Inventory:
@@ -89,9 +88,11 @@ class Inventory:
         for i, item in enumerate(self.inventory):
             slot_x = 10 + i * (self.slot_size + 20)
             slot_y = 35  # Adjusted for larger screen
-            pygame.draw.rect(window, (100, 100, 100), (slot_x, slot_y, self.slot_size, self.slot_size), 2)
+            pygame.draw.rect(window, (0,0,0), (slot_x, slot_y, self.slot_size, self.slot_size), 5)
             if item:
-                pygame.draw.rect(window, item.color, (slot_x + 10, slot_y + 10, 80, 80))  # Adjust item size
+                image = pygame.image.load("Files/GreenPotion.png")
+                image = pygame.transform.scale(image, (135, 135))
+                window.blit(image, (slot_x - 17, slot_y - 15))
 
     @classmethod
     def load_inventory(cls, filename="inventory.pkl"):

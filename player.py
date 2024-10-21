@@ -5,18 +5,28 @@ from item import GameObject
 class Player(GameObject):
     """Player class inherits from GameObject and manages inventory and coins."""
 
-    def __init__(self, x, y, size, color, speed):
-        super().__init__(x, y, size, color)
+    def __init__(self, x, y, speed):
+        super().__init__(x, y)
         self.speed = speed
         self.coins = 0  # Player starts with 0 coins
+        self.flipped = False
 
     def display(self, window):
-        pygame.draw.rect(window, self.color, (self._x, self._y, self.size, self.size))
+        image = pygame.image.load("Files/Player.png").convert_alpha()
+
+        image = pygame.transform.flip(image, self.flipped, False)
+
+        window.blit(image, (self._x, self._y))
 
     def update_position(self, keys):
         direction = Player.get_movement_direction(keys)
         self._x += direction[0] * self.speed
         self._y += direction[1] * self.speed
+
+        if direction[0] < 0:
+            self.flipped = True  # Facing left
+        elif direction[0] > 0:
+            self.flipped = False  # Facing right
 
     @staticmethod
     def get_movement_direction(keys):
@@ -34,8 +44,8 @@ class Player(GameObject):
 
     def check_collision(self, item):
         """Check if the player collides with the given item."""
-        player_rect = pygame.Rect(self._x, self._y, self.size, self.size)
-        item_rect = pygame.Rect(item.position[0], item.position[1], item.size, item.size)
+        player_rect = pygame.Rect(self._x, self._y, 100, 100)
+        item_rect = pygame.Rect(item.position[0], item.position[1], 80, 80)
         return player_rect.colliderect(item_rect)
 
     def display_coins(self, window):

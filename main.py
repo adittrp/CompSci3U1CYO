@@ -10,7 +10,7 @@ pygame.init()
 
 # Constants
 screen_size = (1920, 1080)
-bg_color = (0, 0, 0)  # Black
+bg_color = (100, 100, 100)  # Black
 inventory_slot_size = 128
 num_inventory_slots = 5
 shop_open = False  # Shop open flag
@@ -31,7 +31,7 @@ sell_area = SellArea(1720, 880, 200, (255, 255, 0))
 shop_area = ShopArea(0, 880, 200, (0, 255, 255))  # A separate shop area
 
 # Player Initialization
-player = Player(400, 900, 100, (255, 0, 0), 5)
+player = Player(400, 900, 6)
 
 inventory = Inventory(num_inventory_slots)
 
@@ -110,20 +110,19 @@ while running:
                 # Check if any upgrade was clicked
                 for i, upgrade in enumerate(upgrades):
                     if upgrade.is_hovered((mouse_x, mouse_y), 700, 300 + i * 200):
-                        if upgrade.purchase(player):
-                            print(f"Purchased {upgrade.title}")
+                        upgrade.purchase(player)
 
     # Title screen logic
     if on_title_screen:
         window.fill(bg_color)
         font = pygame.font.SysFont(None, 150)
-        text = font.render("Idle Game", True, (255, 255, 255))
-        window.blit(text, (760, 200))
+        text = font.render("Potion Profiter", True, (255, 255, 255))
+        window.blit(text, (635, 200))
 
         font = pygame.font.SysFont(None, 75)
         play_button_text = font.render("Play", True, (255, 255, 255))
         pygame.draw.rect(window, (0, 255, 0), (800, 500, 400, 100))
-        window.blit(play_button_text, (920, 530))
+        window.blit(play_button_text, (950, 530))
 
     elif shop_open:
         # Display the shop UI
@@ -152,7 +151,7 @@ while running:
         if current_time - last_item_spawn_time > item_spawn_time:
             random_x = random.randint(100, screen_size[0] - 200)  # Random x position
             random_y = random.randint(100, screen_size[1] - 200)  # Random y position
-            new_item = Item(random_x, random_y, 80, (0, 255, 0), "Green Potion")
+            new_item = Item(random_x, random_y)
             items.append(new_item)
             last_item_spawn_time = current_time
 

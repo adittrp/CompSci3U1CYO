@@ -5,7 +5,9 @@ from abc import abstractmethod, ABC
 
 class InteractableAreas(GameObject, ABC):
     def __init__(self, x, y, size, color):
-        super().__init__(x, y, size, color)
+        super().__init__(x, y)
+        self.size = size
+        self.color = color
 
     def display(self, window):
         pygame.draw.rect(window, self.color, (self._x, self._y, self.size, self.size))
@@ -17,7 +19,7 @@ class InteractableAreas(GameObject, ABC):
     def collides_with(self, item):
         """Check if an item has been dropped into the sell area."""
         self_rect = pygame.Rect(self._x, self._y, self.size, self.size)
-        item_rect = pygame.Rect(item.position[0], item.position[1], item.size, item.size)
+        item_rect = pygame.Rect(item.position[0], item.position[1], 80, 80)
         return self_rect.colliderect(item_rect)
 
 
@@ -88,7 +90,5 @@ class Upgrade:
     @staticmethod
     def is_hovered(mouse_pos, x, y):
         button_rect = pygame.Rect(x + 415, y, 120, 120)
-
-        print(button_rect, mouse_pos)
 
         return button_rect.collidepoint(mouse_pos)
