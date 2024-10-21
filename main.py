@@ -1,3 +1,4 @@
+# Import Required libraries and modules
 import pygame
 import random
 from player import Player
@@ -8,20 +9,19 @@ from math import pow
 # Initialize Pygame
 pygame.init()
 
-# Constants
+# Variable Constants
 screen_size = (1920, 1080)
-bg_color = (100, 100, 100)  # Black
+bg_color = (100, 100, 100)
 inventory_slot_size = 128
 num_inventory_slots = 5
-shop_open = False  # Shop open flag
-shop_close_time = 0  # Track the time when the shop was closed
-shop_cooldown = 1500  # 3-second cooldown in milliseconds
+shop_open = False
+shop_close_time = 0
+shop_cooldown = 1500
 
-# Set up the display
+# Set updisplay
 window = pygame.display.set_mode(screen_size)
 pygame.display.set_caption("Potion Profiter")
 
-# Title screen flag
 on_title_screen = True
 
 # Sell area
@@ -47,10 +47,10 @@ MoneyFromCoin = 10
 items = []
 
 # Item spawn timer
-item_spawn_time = 6000  # in milliseconds
+item_spawn_time = 6000
 last_item_spawn_time = pygame.time.get_ticks()
 
-# Load inventory and coins from saved file if it exists
+# Exception Chain to Load inventory and coins from saved file if it exists
 try:
     inventory.inventory, player.coins, PurchasedUpgrades = Inventory.load_inventory()
 
@@ -63,7 +63,7 @@ except Exception:
 # Game loop
 running = True
 while running:
-    current_time = pygame.time.get_ticks()  # Get current time at the start of each loop iteration
+    current_time = pygame.time.get_ticks()
 
     item_spawn_time = 6000 - (upgrades[0].purchases * 100)
 
@@ -80,39 +80,39 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        # Handle the title screen
+        # Ttitle screen
         if on_title_screen:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 if 800 <= mouse_x <= 1200 and 500 <= mouse_y <= 600:
                     on_title_screen = False  # Go to the game screen
 
-        # Handle in-game events
-        elif not shop_open:  # Game is active and shop is closed
+        # Game is active and shop is closed
+        elif not shop_open:
             # Right-click to drop an item
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 mouse_pos = pygame.mouse.get_pos()
                 inventory.drop_item(mouse_pos, items, sell_area, player, MoneyFromCoin)
 
-            # Handle player entering the shop area
-            if current_time - shop_close_time > shop_cooldown:  # Check if cooldown has passed
+            # Player entering the shop area if cooldown is done
+            if current_time - shop_close_time > shop_cooldown:
                 if player.check_collision(shop_area):
-                    shop_open = True  # Open the shop
+                    shop_open = True
 
-        elif shop_open:  # Shop is open
-            # Handle closing the shop
+        elif shop_open:
+            # Closing the shop
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 if 1580 <= mouse_x <= 1640 and 100 <= mouse_y <= 160:
-                    shop_open = False  # Close the shop
-                    shop_close_time = current_time  # Update shop close time to start cooldown
+                    shop_open = False
+                    shop_close_time = current_time
 
                 # Check if any upgrade was clicked
                 for i, upgrade in enumerate(upgrades):
                     if upgrade.is_hovered((mouse_x, mouse_y), 700, 300 + i * 200):
                         upgrade.purchase(player)
 
-    # Title screen logic
+    # Title screen
     if on_title_screen:
         window.fill(bg_color)
         font = pygame.font.SysFont(None, 150)
@@ -149,8 +149,8 @@ while running:
         # Item spawning logic
         current_time = pygame.time.get_ticks()
         if current_time - last_item_spawn_time > item_spawn_time:
-            random_x = random.randint(100, screen_size[0] - 200)  # Random x position
-            random_y = random.randint(100, screen_size[1] - 200)  # Random y position
+            random_x = random.randint(100, screen_size[0] - 200)
+            random_y = random.randint(100, screen_size[1] - 200)
             new_item = Item(random_x, random_y)
             items.append(new_item)
             last_item_spawn_time = current_time
@@ -188,7 +188,7 @@ while running:
     # Update the display
     pygame.display.flip()
 
-    # Cap the frame rate
+    # Cap the frame rate to control player speed
     pygame.time.Clock().tick(300)
 
 # Save the player's inventory and coins when quitting

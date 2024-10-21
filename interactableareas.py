@@ -2,7 +2,7 @@ import pygame
 from item import GameObject
 from abc import abstractmethod, ABC
 
-
+# Abstract Class also inheriting from GameObject
 class InteractableAreas(GameObject, ABC):
     def __init__(self, x, y, size, color):
         super().__init__(x, y)
@@ -17,33 +17,27 @@ class InteractableAreas(GameObject, ABC):
         pass
 
     def collides_with(self, item):
-        """Check if an item has been dropped into the sell area."""
+        # Check if an item has been dropped into the sell area
         self_rect = pygame.Rect(self._x, self._y, self.size, self.size)
         item_rect = pygame.Rect(item.position[0], item.position[1], 80, 80)
         return self_rect.colliderect(item_rect)
 
 
 class SellArea(InteractableAreas):
-    """SellArea class where the player can drop items to earn coins."""
-
     def __init__(self, x, y, size, color):
         super().__init__(x, y, size, color)
 
     def display_text(self, window):
-        """Display 'Sell Here' text above the sell area."""
         font = pygame.font.SysFont(None, 35)
         text = font.render("Sell Here", True, (255, 255, 255))
         window.blit(text, (self._x + 30, self._y - 30))
 
 
 class ShopArea(InteractableAreas):
-    """ShopArea where the player can open the shop UI."""
-
     def __init__(self, x, y, size, color):
         super().__init__(x, y, size, color)
 
     def display_text(self, window):
-        """Display 'Shop' text above the shop area."""
         font = pygame.font.SysFont(None, 35)
         text = font.render("Shop Here", True, (255, 255, 255))
         window.blit(text, (self._x + 30, self._y - 30))
@@ -55,7 +49,7 @@ class Upgrade:
         self.description = description
         self.cost = cost
         self.max_purchases = max_purchases
-        self.purchases = 0  # Track how many times this upgrade has been purchased
+        self.purchases = 0
 
     def purchase(self, player):
         if player.coins >= self.cost and self.purchases < self.max_purchases:
@@ -68,7 +62,7 @@ class Upgrade:
         font = pygame.font.SysFont(None, 40)
 
         # Draw the box around the upgrade
-        pygame.draw.rect(window, (100, 100, 100), (x - 20, y - 20, 600, 180), 5)  # Gray border around upgrade
+        pygame.draw.rect(window, (100, 100, 100), (x - 20, y - 20, 600, 180), 5)
 
         # Title, description, and purchase count
         title_text = font.render(self.title, True, (0, 0, 0))
