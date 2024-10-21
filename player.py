@@ -1,5 +1,4 @@
 import pygame
-import pickle  # For pickling data
 from item import GameObject
 
 
@@ -42,5 +41,5 @@ class Player(GameObject):
     def display_coins(self, window):
         """Display the current coin total."""
         font = pygame.font.SysFont(None, 50)
-        coin_text = font.render(f"Coins: {self.coins}", True, (255, 255, 255))
+        coin_text = font.render(f"Coins: {int(self.coins)}", True, (255, 255, 255))
         window.blit(coin_text, (1650, 50))  # Moved to top-right for larger screen

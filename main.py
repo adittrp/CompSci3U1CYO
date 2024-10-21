@@ -1,9 +1,9 @@
 import pygame
 import random
-import pickle
 from player import Player
 from item import Item, Inventory
-from interactableareas import SellArea, ShopArea
+from interactableareas import SellArea, ShopArea, Upgrade
+from math import pow
 
 # Initialize Pygame
 pygame.init()
@@ -15,7 +15,7 @@ inventory_slot_size = 128
 num_inventory_slots = 5
 shop_open = False  # Shop open flag
 shop_close_time = 0  # Track the time when the shop was closed
-shop_cooldown = 3000  # 3-second cooldown in milliseconds
+shop_cooldown = 1500  # 3-second cooldown in milliseconds
 
 # Set up the display
 window = pygame.display.set_mode(screen_size)
@@ -31,9 +31,17 @@ sell_area = SellArea(1720, 880, 200, (255, 255, 0))
 shop_area = ShopArea(0, 880, 200, (0, 255, 255))  # A separate shop area
 
 # Player Initialization
-player = Player(1600, 900, 100, (255, 0, 0), 10)
+player = Player(400, 900, 100, (255, 0, 0), 5)
 
 inventory = Inventory(num_inventory_slots)
+
+upgrades = [
+    Upgrade("Faster Spawns", "Items spawn faster.", 50, 50),
+    Upgrade("More Inventory Space", "Increase inventory size.", 100, 7),
+    Upgrade("More Money", "Earn more coins from sales.", 75, 30)
+]
+
+MoneyFromCoin = 10
 
 # List for spawned items
 items = []
@@ -44,8 +52,11 @@ last_item_spawn_time = pygame.time.get_ticks()
 
 # Load inventory and coins from saved file if it exists
 try:
-    with open("inventory.pkl", "rb") as f:
-        inventory.inventory, player.coins = pickle.load(f)
+    inventory.inventory, player.coins, PurchasedUpgrades = Inventory.load_inventory()
+
+    for i in range(len(upgrades)):
+        upgrades[i].purchases = PurchasedUpgrades[i]
+
 except Exception:
     print("No saved inventory found. Starting fresh.")
 
@@ -53,6 +64,17 @@ except Exception:
 running = True
 while running:
     current_time = pygame.time.get_ticks()  # Get current time at the start of each loop iteration
+
+    item_spawn_time = 6000 - (upgrades[0].purchases * 100)
+
+    while len(inventory.inventory) < upgrades[1].purchases + 5:
+        inventory.inventory.append(None)
+
+    MoneyFromCoin = pow(upgrades[2].purchases + 2, 1.5) + 10
+
+    upgrades[0].cost = int(50 * pow(1.5, upgrades[0].purchases))
+    upgrades[1].cost = int(100 * pow(1.5, upgrades[1].purchases))
+    upgrades[2].cost = int(75 * pow(1.5, upgrades[2].purchases))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -70,7 +92,7 @@ while running:
             # Right-click to drop an item
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 mouse_pos = pygame.mouse.get_pos()
-                inventory.drop_item(mouse_pos, items, sell_area, player)
+                inventory.drop_item(mouse_pos, items, sell_area, player, MoneyFromCoin)
 
             # Handle player entering the shop area
             if current_time - shop_close_time > shop_cooldown:  # Check if cooldown has passed
@@ -84,6 +106,12 @@ while running:
                 if 1580 <= mouse_x <= 1640 and 100 <= mouse_y <= 160:
                     shop_open = False  # Close the shop
                     shop_close_time = current_time  # Update shop close time to start cooldown
+
+                # Check if any upgrade was clicked
+                for i, upgrade in enumerate(upgrades):
+                    if upgrade.is_hovered((mouse_x, mouse_y), 700, 300 + i * 200):
+                        if upgrade.purchase(player):
+                            print(f"Purchased {upgrade.title}")
 
     # Title screen logic
     if on_title_screen:
@@ -109,6 +137,10 @@ while running:
         font = pygame.font.SysFont(None, 75)
         x_button_text = font.render("X", True, (255, 255, 255))
         window.blit(x_button_text, (1595, 105))
+
+        # Display the upgrades
+        for i, upgrade in enumerate(upgrades):
+            upgrade.display(window, 700, 300 + i * 200)
 
     else:
         # Update player position
@@ -158,10 +190,12 @@ while running:
     pygame.display.flip()
 
     # Cap the frame rate
-    pygame.time.Clock().tick(60)
+    pygame.time.Clock().tick(300)
 
 # Save the player's inventory and coins when quitting
-with open("inventory.pkl", "wb") as f:
-    pickle.dump((inventory.inventory, player.coins), f)
+try:
+    Inventory.save_inventory(inventory, player, upgrades)
+except Exception:
+    print("Could not save the inventory data")
 
 pygame.quit()
